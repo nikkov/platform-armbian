@@ -1,0 +1,12 @@
+--- config/kernel/linux-sunxi64-current.config	2019-11-30 13:25:27.120795999 +0600
++++ userpatches/linux-sunxi64-current.config	2019-12-13 18:21:22.412508727 +0600
+@@ -377,7 +377,8 @@
+ # CONFIG_ARM64_SW_TTBR0_PAN is not set
+ CONFIG_COMPAT=y
+ CONFIG_KUSER_HELPERS=y
+-# CONFIG_ARMV8_DEPRECATED is not set
++CONFIG_ARMV8_DEPRECATED=y
++CONFIG_CP15_BARRIER_EMULATION=y
+ 
+ #
+ # ARMv8.1 architectural features
