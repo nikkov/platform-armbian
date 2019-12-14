@@ -2,6 +2,8 @@
 C=`pwd`
 A=../armbian
 B=current
+# patch for current branch armbian looking for in sunxi-dev???
+USERPATCHES_KERNEL_DIR=dev
 P=$1
 V=v19.11
 
@@ -31,8 +33,8 @@ fi
 
 echo "Copy patches"
 cd ${C}
-mkdir -p ${A}/userpatches/kernel/sunxi-${B}
-cp ${C}/patches/kernel/sunxi-${B}/*.patch ${A}/userpatches/kernel/sunxi-${B}/
+mkdir -p ${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
+cp ${C}/patches/kernel/sunxi-${B}/*.patch ${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
   cp ${A}/config/kernel/linux-sunxi64-${B}.config ${A}/userpatches/linux-sunxi64-${B}.config
