@@ -1,5 +1,5 @@
 diff --git a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
-index b1e88d55b..430b45e9c 100644
+index b1e88d55b..af96d943d 100644
 --- a/sound/soc/sunxi/Kconfig
 +++ b/sound/soc/sunxi/Kconfig
 @@ -1,4 +1,3 @@
@@ -30,7 +30,7 @@ index b1e88d55b..430b45e9c 100644
  	  Say Y or M if you want to add support for codecs attached to
  	  the Allwinner A10 I2S. You will also need to select the
 diff --git a/sound/soc/sunxi/sun4i-i2s.c b/sound/soc/sunxi/sun4i-i2s.c
-index ab8cb83c8..bee281af0 100644
+index ab8cb83c8..f7d650a6d 100644
 --- a/sound/soc/sunxi/sun4i-i2s.c
 +++ b/sound/soc/sunxi/sun4i-i2s.c
 @@ -23,10 +23,11 @@
@@ -394,7 +394,33 @@ index ab8cb83c8..bee281af0 100644
  
  	return 0;
  }
-@@ -382,50 +438,346 @@ static s8 sun8i_i2s_get_sr_wss(const struct sun4i_i2s *i2s, int width)
+@@ -362,13 +418,18 @@ static s8 sun4i_i2s_get_sr(const struct sun4i_i2s *i2s, int width)
+ 
+ static s8 sun4i_i2s_get_wss(const struct sun4i_i2s *i2s, int width)
+ {
+-	if (width < 16 || width > 32)
+-		return -EINVAL;
+-
+-	if (width % 4)
+-		return -EINVAL;
+-
+-	return (width - 16) / 4;
++	switch(width) {
++		case 16:
++			return 0;
++		case 20:
++			return 1;
++		case 24:
++			return 2;
++		case 32:
++			return 3;
++		default:
++			return -EINVAL;
++	}
+ }
+ 
+ static s8 sun8i_i2s_get_sr_wss(const struct sun4i_i2s *i2s, int width)
+@@ -382,50 +443,346 @@ static s8 sun8i_i2s_get_sr_wss(const struct sun4i_i2s *i2s, int width)
  	return (width - 8) / 4 + 1;
  }
  
@@ -691,9 +717,7 @@ index ab8cb83c8..bee281af0 100644
 -	regmap_field_write(i2s->field_txchansel,
 -			   SUN4I_I2S_CHAN_SEL(params_channels(params)));
 +		lines = (channels + 1) / 2;
- 
--	regmap_field_write(i2s->field_rxchansel,
--			   SUN4I_I2S_CHAN_SEL(params_channels(params)));
++
 +		/* Enable the required output lines */
 +		regmap_update_bits(i2s->regmap, SUN4I_I2S_CTRL_REG,
 +				   SUN4I_I2S_CTRL_SDO_EN_MASK,
@@ -740,14 +764,16 @@ index ab8cb83c8..bee281af0 100644
 +			return -EINVAL;
 +		}
  
+-	regmap_field_write(i2s->field_rxchansel,
+-			   SUN4I_I2S_CHAN_SEL(params_channels(params)));
++		/* Map the channels for capture */
++		i2s->variant->set_rxchanmap(i2s, 0x10);
++		i2s->variant->set_rxchansel(i2s, channels);
+ 
 -	if (i2s->variant->has_chsel_tx_chen)
 -		regmap_update_bits(i2s->regmap, SUN8I_I2S_TX_CHAN_SEL_REG,
 -				   SUN8I_I2S_TX_CHAN_EN_MASK,
 -				   SUN8I_I2S_TX_CHAN_EN(channels));
-+		/* Map the channels for capture */
-+		i2s->variant->set_rxchanmap(i2s, 0x10);
-+		i2s->variant->set_rxchansel(i2s, channels);
-+
 +		if (i2s->variant->set_rxchanen)
 +			i2s->variant->set_rxchanen(i2s, channels);
 +
@@ -767,7 +793,7 @@ index ab8cb83c8..bee281af0 100644
  	default:
  		dev_err(dai->dev, "Unsupported physical sample width: %d\n",
  			params_physical_width(params));
-@@ -433,11 +785,11 @@ static int sun4i_i2s_hw_params(struct snd_pcm_substream *substream,
+@@ -433,11 +790,11 @@ static int sun4i_i2s_hw_params(struct snd_pcm_substream *substream,
  	}
  	i2s->playback_dma_data.addr_width = width;
  
@@ -781,7 +807,7 @@ index ab8cb83c8..bee281af0 100644
  	if (wss < 0)
  		return -EINVAL;
  
-@@ -445,126 +797,206 @@ static int sun4i_i2s_hw_params(struct snd_pcm_substream *substream,
+@@ -445,126 +802,206 @@ static int sun4i_i2s_hw_params(struct snd_pcm_substream *substream,
  	regmap_field_write(i2s->field_fmt_sr, sr);
  
  	return sun4i_i2s_set_clk_rate(dai, params_rate(params),
@@ -1069,7 +1095,7 @@ index ab8cb83c8..bee281af0 100644
  	}
  
  	/* Set significant bits in our FIFOs */
-@@ -573,13 +1005,30 @@ static int sun4i_i2s_set_fmt(struct snd_soc_dai *dai, unsigned int fmt)
+@@ -573,13 +1010,30 @@ static int sun4i_i2s_set_fmt(struct snd_soc_dai *dai, unsigned int fmt)
  			   SUN4I_I2S_FIFO_CTRL_RX_MODE_MASK,
  			   SUN4I_I2S_FIFO_CTRL_TX_MODE(1) |
  			   SUN4I_I2S_FIFO_CTRL_RX_MODE(1));
@@ -1101,7 +1127,7 @@ index ab8cb83c8..bee281af0 100644
  			   SUN4I_I2S_FIFO_CTRL_FLUSH_RX,
  			   SUN4I_I2S_FIFO_CTRL_FLUSH_RX);
  
-@@ -595,12 +1044,17 @@ static void sun4i_i2s_start_capture(struct sun4i_i2s *i2s)
+@@ -595,12 +1049,17 @@ static void sun4i_i2s_start_capture(struct sun4i_i2s *i2s)
  	regmap_update_bits(i2s->regmap, SUN4I_I2S_DMA_INT_CTRL_REG,
  			   SUN4I_I2S_DMA_INT_CTRL_RX_DRQ_EN,
  			   SUN4I_I2S_DMA_INT_CTRL_RX_DRQ_EN);
@@ -1120,7 +1146,7 @@ index ab8cb83c8..bee281af0 100644
  			   SUN4I_I2S_FIFO_CTRL_FLUSH_TX,
  			   SUN4I_I2S_FIFO_CTRL_FLUSH_TX);
  
-@@ -671,6 +1125,34 @@ static int sun4i_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
+@@ -671,6 +1130,34 @@ static int sun4i_i2s_trigger(struct snd_pcm_substream *substream, int cmd,
  	default:
  		return -EINVAL;
  	}
@@ -1155,7 +1181,7 @@ index ab8cb83c8..bee281af0 100644
  
  	return 0;
  }
-@@ -680,6 +1162,8 @@ static int sun4i_i2s_set_sysclk(struct snd_soc_dai *dai, int clk_id,
+@@ -680,6 +1167,8 @@ static int sun4i_i2s_set_sysclk(struct snd_soc_dai *dai, int clk_id,
  {
  	struct sun4i_i2s *i2s = snd_soc_dai_get_drvdata(dai);
  
@@ -1164,7 +1190,7 @@ index ab8cb83c8..bee281af0 100644
  	if (clk_id != 0)
  		return -EINVAL;
  
-@@ -688,10 +1172,26 @@ static int sun4i_i2s_set_sysclk(struct snd_soc_dai *dai, int clk_id,
+@@ -688,10 +1177,26 @@ static int sun4i_i2s_set_sysclk(struct snd_soc_dai *dai, int clk_id,
  	return 0;
  }
  
@@ -1191,7 +1217,7 @@ index ab8cb83c8..bee281af0 100644
  	.trigger	= sun4i_i2s_trigger,
  };
  
-@@ -708,21 +1208,27 @@ static int sun4i_i2s_dai_probe(struct snd_soc_dai *dai)
+@@ -708,21 +1213,27 @@ static int sun4i_i2s_dai_probe(struct snd_soc_dai *dai)
  	return 0;
  }
  
@@ -1226,7 +1252,7 @@ index ab8cb83c8..bee281af0 100644
  	},
  	.ops = &sun4i_i2s_dai_ops,
  	.symmetric_rates = 1,
-@@ -734,13 +1240,7 @@ static const struct snd_soc_component_driver sun4i_i2s_component = {
+@@ -734,13 +1245,7 @@ static const struct snd_soc_component_driver sun4i_i2s_component = {
  
  static bool sun4i_i2s_rd_reg(struct device *dev, unsigned int reg)
  {
@@ -1241,7 +1267,7 @@ index ab8cb83c8..bee281af0 100644
  }
  
  static bool sun4i_i2s_wr_reg(struct device *dev, unsigned int reg)
-@@ -759,6 +1259,8 @@ static bool sun4i_i2s_volatile_reg(struct device *dev, unsigned int reg)
+@@ -759,6 +1264,8 @@ static bool sun4i_i2s_volatile_reg(struct device *dev, unsigned int reg)
  {
  	switch (reg) {
  	case SUN4I_I2S_FIFO_RX_REG:
@@ -1250,7 +1276,7 @@ index ab8cb83c8..bee281af0 100644
  	case SUN4I_I2S_INT_STA_REG:
  	case SUN4I_I2S_RX_CNT_REG:
  	case SUN4I_I2S_TX_CNT_REG:
-@@ -769,23 +1271,12 @@ static bool sun4i_i2s_volatile_reg(struct device *dev, unsigned int reg)
+@@ -769,23 +1276,12 @@ static bool sun4i_i2s_volatile_reg(struct device *dev, unsigned int reg)
  	}
  }
  
@@ -1275,7 +1301,7 @@ index ab8cb83c8..bee281af0 100644
  
  	return sun4i_i2s_volatile_reg(dev, reg);
  }
-@@ -817,6 +1308,22 @@ static const struct reg_default sun8i_i2s_reg_defaults[] = {
+@@ -817,6 +1313,22 @@ static const struct reg_default sun8i_i2s_reg_defaults[] = {
  	{ SUN8I_I2S_RX_CHAN_MAP_REG, 0x00000000 },
  };
  
@@ -1298,7 +1324,7 @@ index ab8cb83c8..bee281af0 100644
  static const struct regmap_config sun4i_i2s_regmap_config = {
  	.reg_bits	= 32,
  	.reg_stride	= 4,
-@@ -840,7 +1347,20 @@ static const struct regmap_config sun8i_i2s_regmap_config = {
+@@ -840,7 +1352,20 @@ static const struct regmap_config sun8i_i2s_regmap_config = {
  	.reg_defaults	= sun8i_i2s_reg_defaults,
  	.num_reg_defaults	= ARRAY_SIZE(sun8i_i2s_reg_defaults),
  	.writeable_reg	= sun4i_i2s_wr_reg,
@@ -1320,7 +1346,7 @@ index ab8cb83c8..bee281af0 100644
  	.volatile_reg	= sun8i_i2s_volatile_reg,
  };
  
-@@ -914,16 +1434,20 @@ static const struct sun4i_i2s_quirks sun4i_a10_i2s_quirks = {
+@@ -914,16 +1439,20 @@ static const struct sun4i_i2s_quirks sun4i_a10_i2s_quirks = {
  	.field_clkdiv_mclk_en	= REG_FIELD(SUN4I_I2S_CLK_DIV_REG, 7, 7),
  	.field_fmt_wss		= REG_FIELD(SUN4I_I2S_FMT0_REG, 2, 3),
  	.field_fmt_sr		= REG_FIELD(SUN4I_I2S_FMT0_REG, 4, 5),
@@ -1349,7 +1375,7 @@ index ab8cb83c8..bee281af0 100644
  };
  
  static const struct sun4i_i2s_quirks sun6i_a31_i2s_quirks = {
-@@ -933,18 +1457,27 @@ static const struct sun4i_i2s_quirks sun6i_a31_i2s_quirks = {
+@@ -933,18 +1462,27 @@ static const struct sun4i_i2s_quirks sun6i_a31_i2s_quirks = {
  	.field_clkdiv_mclk_en	= REG_FIELD(SUN4I_I2S_CLK_DIV_REG, 7, 7),
  	.field_fmt_wss		= REG_FIELD(SUN4I_I2S_FMT0_REG, 2, 3),
  	.field_fmt_sr		= REG_FIELD(SUN4I_I2S_FMT0_REG, 4, 5),
@@ -1385,7 +1411,7 @@ index ab8cb83c8..bee281af0 100644
  static const struct sun4i_i2s_quirks sun8i_a83t_i2s_quirks = {
  	.has_reset		= true,
  	.reg_offset_txdata	= SUN8I_I2S_FIFO_TX_REG,
-@@ -952,59 +1485,97 @@ static const struct sun4i_i2s_quirks sun8i_a83t_i2s_quirks = {
+@@ -952,59 +1490,97 @@ static const struct sun4i_i2s_quirks sun8i_a83t_i2s_quirks = {
  	.field_clkdiv_mclk_en	= REG_FIELD(SUN4I_I2S_CLK_DIV_REG, 7, 7),
  	.field_fmt_wss		= REG_FIELD(SUN4I_I2S_FMT0_REG, 2, 3),
  	.field_fmt_sr		= REG_FIELD(SUN4I_I2S_FMT0_REG, 4, 5),
@@ -1514,7 +1540,7 @@ index ab8cb83c8..bee281af0 100644
  };
  
  static int sun4i_i2s_init_regmap_fields(struct device *dev,
-@@ -1028,46 +1599,7 @@ static int sun4i_i2s_init_regmap_fields(struct device *dev,
+@@ -1028,46 +1604,7 @@ static int sun4i_i2s_init_regmap_fields(struct device *dev,
  	if (IS_ERR(i2s->field_fmt_sr))
  		return PTR_ERR(i2s->field_fmt_sr);
  
@@ -1562,7 +1588,7 @@ index ab8cb83c8..bee281af0 100644
  }
  
  static int sun4i_i2s_probe(struct platform_device *pdev)
-@@ -1088,10 +1620,8 @@ static int sun4i_i2s_probe(struct platform_device *pdev)
+@@ -1088,10 +1625,8 @@ static int sun4i_i2s_probe(struct platform_device *pdev)
  		return PTR_ERR(regs);
  
  	irq = platform_get_irq(pdev, 0);
@@ -1574,7 +1600,7 @@ index ab8cb83c8..bee281af0 100644
  
  	i2s->variant = of_device_get_match_data(&pdev->dev);
  	if (!i2s->variant) {
-@@ -1142,6 +1672,10 @@ static int sun4i_i2s_probe(struct platform_device *pdev)
+@@ -1142,6 +1677,10 @@ static int sun4i_i2s_probe(struct platform_device *pdev)
  	i2s->capture_dma_data.addr = res->start + SUN4I_I2S_FIFO_RX_REG;
  	i2s->capture_dma_data.maxburst = 8;
  
@@ -1585,7 +1611,7 @@ index ab8cb83c8..bee281af0 100644
  	pm_runtime_enable(&pdev->dev);
  	if (!pm_runtime_enabled(&pdev->dev)) {
  		ret = sun4i_i2s_runtime_resume(&pdev->dev);
-@@ -1149,23 +1683,23 @@ static int sun4i_i2s_probe(struct platform_device *pdev)
+@@ -1149,23 +1688,23 @@ static int sun4i_i2s_probe(struct platform_device *pdev)
  			goto err_pm_disable;
  	}
  
@@ -1616,7 +1642,7 @@ index ab8cb83c8..bee281af0 100644
  		goto err_suspend;
  	}
  
-@@ -1186,8 +1720,6 @@ static int sun4i_i2s_remove(struct platform_device *pdev)
+@@ -1186,8 +1725,6 @@ static int sun4i_i2s_remove(struct platform_device *pdev)
  {
  	struct sun4i_i2s *i2s = dev_get_drvdata(&pdev->dev);
  
@@ -1625,7 +1651,7 @@ index ab8cb83c8..bee281af0 100644
  	pm_runtime_disable(&pdev->dev);
  	if (!pm_runtime_status_suspended(&pdev->dev))
  		sun4i_i2s_runtime_suspend(&pdev->dev);
-@@ -1219,6 +1751,10 @@ static const struct of_device_id sun4i_i2s_match[] = {
+@@ -1219,6 +1756,10 @@ static const struct of_device_id sun4i_i2s_match[] = {
  		.compatible = "allwinner,sun50i-a64-codec-i2s",
  		.data = &sun50i_a64_codec_i2s_quirks,
  	},
@@ -1636,7 +1662,7 @@ index ab8cb83c8..bee281af0 100644
  	{}
  };
  MODULE_DEVICE_TABLE(of, sun4i_i2s_match);
-@@ -1242,4 +1778,4 @@ module_platform_driver(sun4i_i2s_driver);
+@@ -1242,4 +1783,4 @@ module_platform_driver(sun4i_i2s_driver);
  MODULE_AUTHOR("Andrea Venturi <be17068@iperbole.bo.it>");
  MODULE_AUTHOR("Maxime Ripard <maxime.ripard@free-electrons.com>");
  MODULE_DESCRIPTION("Allwinner A10 I2S driver");

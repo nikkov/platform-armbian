@@ -115,9 +115,10 @@ logo=disabled
 console=serial
 disp_mode=1920x1080p60
 overlay_prefix=sun7i-a20
+overlays=analog-codec
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
-user_overlays=
+user_overlays=sun7i-a20-i2s0-slave
 extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ${P}/boot/armbianEnv.txt
   ;;
 'nanopineo2')
