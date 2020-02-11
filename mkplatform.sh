@@ -11,7 +11,7 @@ case $P in
 'nanopineo' | 'nanopiair')
   PLATFORM="sun8i-h3"
   ;;
-'nanopineo2' | 'nanopi_neo_plus2')
+'nanopineo2' | 'nanopineoplus2')
   PLATFORM="sun50i-h5"
   ;;
 'cubietruck')
@@ -39,12 +39,12 @@ fi
 echo "Copy patches"
 cd ${C}
 mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
-cp ./${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
+cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
   cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
-  patch -p0 < ./${C}/patches/config/linux-sunxi64-${B}.patch
+  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
 fi
 
 cd ${A}
@@ -85,10 +85,10 @@ fi
 
 echo "Copy overlays for ${PLATFORM}"
 mkdir ./${P}/boot/overlay-user
-cp ./${C}/sources/overlays/${PLATFORM}-*.* ./${P}/boot/overlay-user
-dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-master.dtbo ./${C}/sources/overlays/${PLATFORM}-i2s0-master.dts
-dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-slave.dtbo ./${C}/sources/overlays/${PLATFORM}-i2s0-slave.dts
-dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ./${C}/sources/overlays/${PLATFORM}-powen.dts
+cp ${C}/sources/overlays/${PLATFORM}-*.* ./${P}/boot/overlay-user
+dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-master.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-master.dts
+dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-slave.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-slave.dts
+dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
   cp ./${A}/config/bootscripts/boot-sun50i-next.cmd ./${P}/boot/boot.cmd
@@ -126,7 +126,7 @@ rootfstype=ext4
 user_overlays=sun7i-a20-i2s0-slave
 extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
   ;;
-'nanopineo2' | 'nanopi_neo_plus2')
+'nanopineo2' | 'nanopineoplus2')
   echo "verbosity=1
 logo=disabled
 console=serial
