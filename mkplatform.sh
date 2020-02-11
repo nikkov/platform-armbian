@@ -17,6 +17,11 @@ case $P in
 'cubietruck')
   PLATFORM="sun7i-a20"
   ;;
+*)
+  PLATFORM="unknown"
+  echo "Please set known board name as script parameter"
+  exit 1
+  ;;
 esac
 
 echo "-----Build for ${P}, platform ${PLATFORM}-----"
@@ -33,66 +38,66 @@ fi
 
 echo "Copy patches"
 cd ${C}
-mkdir -p ${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
-cp ${C}/patches/kernel/sunxi-${B}/*.patch ${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
+mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
+cp ./${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ${A}/config/kernel/linux-sunxi64-${B}.config ${A}/userpatches/linux-sunxi64-${B}.config
+  ./cp ${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
-  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
+  patch -p0 < ./${C}/patches/config/linux-sunxi64-${B}.patch
 fi
 
 cd ${A}
 
-rm -rf ${A}/output/debs
+rm -rf ./${A}/output/debs
 
 echo "U-Boot & kernel compile for ${P}"
 ./compile.sh KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no
 
 cd ${C}
-rm -rf ${P}
-mkdir ${P}
-mkdir ${P}/u-boot
-mkdir -p ${P}/usr/sbin
+rm -rf ./${P}
+mkdir ./${P}
+mkdir ./${P}/u-boot
+mkdir -p ./${P}/usr/sbin
 
 echo "Install packages for ${P}"
-dpkg-deb -x ${A}/output/debs/linux-dtb-* ${P}
-dpkg-deb -x ${A}/output/debs/linux-image-* ${P}
-dpkg-deb -x ${A}/output/debs/linux-u-boot-* ${P}
-dpkg-deb -x ${A}/output/debs/armbian-firmware_* ${P}
+dpkg-deb -x ./${A}/output/debs/linux-dtb-* ${P}
+dpkg-deb -x ./${A}/output/debs/linux-image-* ${P}
+dpkg-deb -x ./${A}/output/debs/linux-u-boot-* ${P}
+dpkg-deb -x ./${A}/output/debs/armbian-firmware_* ${P}
 
 echo "Copy U-Boot"
 if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ${P}/usr/lib/linux-u-boot-${B}-*/sunxi-spl.bin ${P}/u-boot
-  cp ${P}/usr/lib/linux-u-boot-${B}-*/u-boot.itb ${P}/u-boot
+  cp ./${P}/usr/lib/linux-u-boot-${B}-*/sunxi-spl.bin ./${P}/u-boot
+  cp ./${P}/usr/lib/linux-u-boot-${B}-*/u-boot.itb ./${P}/u-boot
 else
-  cp ${P}/usr/lib/linux-u-boot-${B}-*/u-boot-sunxi-with-spl.bin ${P}/u-boot
+  cp ./${P}/usr/lib/linux-u-boot-${B}-*/u-boot-sunxi-with-spl.bin ./${P}/u-boot
 fi
 
-rm -rf ${P}/usr ${P}/etc
-mv ${P}/boot/dtb* ${P}/boot/dtb
+rm -rf ./${P}/usr ./${P}/etc
+mv ./${P}/boot/dtb* ./${P}/boot/dtb
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
-  mv ${P}/boot/vmlinuz* ${P}/boot/Image
+  mv ./${P}/boot/vmlinuz* ./${P}/boot/Image
 else
-  mv ${P}/boot/vmlinuz* ${P}/boot/zImage
+  mv ./${P}/boot/vmlinuz* ./${P}/boot/zImage
 fi
 
 echo "Copy overlays for ${PLATFORM}"
-mkdir ${P}/boot/overlay-user
-cp ${C}/sources/overlays/${PLATFORM}-*.* ${P}/boot/overlay-user
-dtc -@ -q -I dts -O dtb -o ${P}/boot/overlay-user/${PLATFORM}-i2s0-master.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-master.dts
-dtc -@ -q -I dts -O dtb -o ${P}/boot/overlay-user/${PLATFORM}-i2s0-slave.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-slave.dts
-dtc -@ -q -I dts -O dtb -o ${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
+mkdir ./${P}/boot/overlay-user
+cp ./${C}/sources/overlays/${PLATFORM}-*.* ./${P}/boot/overlay-user
+dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-master.dtbo ./${C}/sources/overlays/${PLATFORM}-i2s0-master.dts
+dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-slave.dtbo ./${C}/sources/overlays/${PLATFORM}-i2s0-slave.dts
+dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ./${C}/sources/overlays/${PLATFORM}-powen.dts
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ${A}/config/bootscripts/boot-sun50i-next.cmd ${P}/boot/boot.cmd
+  cp ./${A}/config/bootscripts/boot-sun50i-next.cmd ./${P}/boot/boot.cmd
 else
-  cp ${A}/config/bootscripts/boot-sunxi.cmd ${P}/boot/boot.cmd
+  cp ./${A}/config/bootscripts/boot-sunxi.cmd ./${P}/boot/boot.cmd
 fi
 
-mkimage -c none -A arm -T script -d ${P}/boot/boot.cmd ${P}/boot/boot.scr
-touch ${P}/boot/.next
+mkimage -c none -A arm -T script -d ./${P}/boot/boot.cmd ./${P}/boot/boot.scr
+touch ./${P}/boot/.next
 
 echo "Create armbianEnv.txt"
 case $P in
@@ -107,7 +112,7 @@ rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun8i-h3-i2s0-slave
 usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
-extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ${P}/boot/armbianEnv.txt
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
   ;;
 'cubietruck')
   echo "verbosity=1
@@ -119,7 +124,7 @@ overlays=analog-codec
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun7i-a20-i2s0-slave
-extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ${P}/boot/armbianEnv.txt
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
   ;;
 'nanopineo2')
   echo "verbosity=1
@@ -131,7 +136,7 @@ rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun50i-h5-i2s0-slave
 usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
-extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ${P}/boot/armbianEnv.txt
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
   ;;
 esac
 
