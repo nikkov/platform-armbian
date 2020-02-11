@@ -11,7 +11,7 @@ case $P in
 'nanopineo' | 'nanopiair')
   PLATFORM="sun8i-h3"
   ;;
-'nanopineo2')
+'nanopineo2' | 'nanopi_neo_plus2')
   PLATFORM="sun50i-h5"
   ;;
 'cubietruck')
@@ -126,7 +126,7 @@ rootfstype=ext4
 user_overlays=sun7i-a20-i2s0-slave
 extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
   ;;
-'nanopineo2')
+'nanopineo2' | 'nanopi_neo_plus2')
   echo "verbosity=1
 logo=disabled
 console=serial
