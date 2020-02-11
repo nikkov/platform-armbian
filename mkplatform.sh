@@ -42,7 +42,7 @@ mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
 cp ./${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
-  ./cp ${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
+  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
   patch -p0 < ./${C}/patches/config/linux-sunxi64-${B}.patch
 fi
