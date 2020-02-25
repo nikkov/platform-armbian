@@ -803,7 +803,7 @@ index ab8cb83c8..f7d650a6d 100644
  		return -EINVAL;
  
 -	wss = i2s->variant->get_wss(i2s, params_width(params));
-+	wss = i2s->variant->get_wss(i2s, slot_width);
++	wss = i2s->variant->get_wss(i2s, word_size);
  	if (wss < 0)
  		return -EINVAL;
  

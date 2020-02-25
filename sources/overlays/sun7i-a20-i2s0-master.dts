@@ -43,7 +43,8 @@
 				simple-audio-card,name = "I2S-master";
 				simple-audio-card,mclk-fs = <128>;
 				simple-audio-card,format = "i2s";
-		                status = "okay";
+				simple-audio-card,frame-inversion;
+				status = "okay";
 
 				simple-audio-card,cpu {
 					sound-dai = <&i2s0>;

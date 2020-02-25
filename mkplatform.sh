@@ -3,9 +3,13 @@ C=`pwd`
 A=../armbian
 B=current
 # patch for current branch armbian looking for in sunxi-dev???
-USERPATCHES_KERNEL_DIR=dev
+USERPATCHES_KERNEL_DIR=current
 P=$1
 V=v19.11
+
+cd ${A}
+CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
+cd ${C}
 
 case $P in
 'nanopineo' | 'nanopiair')
@@ -25,10 +29,18 @@ case $P in
 esac
 
 echo "-----Build for ${P}, platform ${PLATFORM}-----"
-
+echo "-----Current armbian branch is ${CUR_BRANCH}-----"
 
 if [ -d ${A} ]; then
   echo "Armbian folder already exists - keeping it"
+if [ "${CUR_BRANCH}" != "${V}" ];
+then
+  echo "Armbian branch changed"
+  cd ${A}
+  git checkout master
+  git pull
+  git checkout ${V} && touch .ignore_changes
+fi
 else
   echo "Clone Armbian repository to folder ${A}"
   git clone https://github.com/armbian/build ${A}
@@ -41,6 +53,7 @@ cd ${C}
 mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
 cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
+# in armbian 20.02 options CONFIG_ARMV8_DEPRECATED and CONFIG_CP15_BARRIER_EMULATION already enabled
 if [ "$PLATFORM" = "sun50i-h5" ]; then
   cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
