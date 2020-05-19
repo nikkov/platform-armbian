@@ -3,7 +3,7 @@ C=`pwd`
 A=../armbian
 B=current
 # patch for current branch armbian looking for in sunxi-dev???
-USERPATCHES_KERNEL_DIR=current
+USERPATCHES_KERNEL_DIR=dev
 P=$1
 V=v19.11
 

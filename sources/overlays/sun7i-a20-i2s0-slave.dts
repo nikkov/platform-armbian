@@ -36,7 +36,8 @@
 				compatible = "custom,i2s_clock_board";
 				pinctrl-names = "default";
 				pinctrl-0 = <&i2sclk_pins>;
-				clk-gpios = <&pio 1 9 1>, <&pio 1 5 1>, <&pio 1 10 1>;
+				clk-gpios = <&pio 1 5 1>, <&pio 1 9 1>, <&pio 1 10 1>;
+				inversion-clock-select;
 				status = "okay";
 			};
 

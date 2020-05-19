@@ -31,6 +31,7 @@
 struct i2s_clock_board_priv {
 	unsigned long clk_gpios[3];
 	unsigned long mute_gpio;
+	bool inverse_clk_sel;
 };
 
 static int i2s_clock_board_soc_probe(struct snd_soc_component *component)
@@ -84,37 +85,37 @@ static int set_clock(struct i2s_clock_board_priv *priv, unsigned long rate)
 	switch(rate)
 	{
 		case 44100:
-			clk_family = 0;
+			clk_family = priv->inverse_clk_sel;
 			div_tb[0] = 1;
 			div_tb[1] = 1;
 			break;
 		case 48000:
-			clk_family = 1;
+			clk_family = !priv->inverse_clk_sel;
 			div_tb[0] = 1;
 			div_tb[1] = 1;
 			break;
 		case 88200:
-			clk_family = 0;
+			clk_family = priv->inverse_clk_sel;
 			div_tb[0] = 1;
 			div_tb[1] = 0;
 			break;
 		case 96000:
-			clk_family = 1;
+			clk_family = !priv->inverse_clk_sel;
 			div_tb[0] = 1;
 			div_tb[1] = 0;
 			break;
 		case 176400:
-			clk_family = 0;
+			clk_family = priv->inverse_clk_sel;
 			div_tb[0] = 0;
 			div_tb[1] = 0;
 			break;
 		case 192000:
-			clk_family = 1;
+			clk_family = !priv->inverse_clk_sel;
 			div_tb[0] = 0;
 			div_tb[1] = 0;
 			break;
 		case 384000:
-			clk_family = 1;
+			clk_family = !priv->inverse_clk_sel;
 			div_tb[0] = 0;
 			div_tb[1] = 1;
 			break;
@@ -257,6 +258,11 @@ static int i2s_clock_board_probe(struct platform_device *pdev)
 		priv->clk_gpios[i] = ret;
 		DBGOUT("%s: priv->clk_gpios[%d] = %d\n", __func__, i, ret);
 	}	
+	if (of_property_read_bool(dev->of_node, "inversion-clock-select"))
+		priv->inverse_clk_sel = true;
+	else
+		priv->inverse_clk_sel = false;
+	DBGOUT("%s: priv->inverse_clk_sel = %d\n", __func__, (int)priv->inverse_clk_sel);
 	ret = of_get_named_gpio(dev->of_node, "mute-gpios", 0);
 	if(ret < 0)
 		priv->mute_gpio = 0;
