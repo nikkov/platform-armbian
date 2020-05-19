@@ -794,7 +794,7 @@ static int sun4i_i2s_hw_params(struct snd_pcm_substream *substream,
 	if (sr < 0)
 		return -EINVAL;
 
-	wss = i2s->variant->get_wss(i2s, word_size);
+	wss = i2s->variant->get_wss(i2s, slot_width);
 	if (wss < 0)
 		return -EINVAL;
 
