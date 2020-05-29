@@ -5,7 +5,8 @@ B=current
 # patch for current branch armbian looking for in sunxi-dev???
 USERPATCHES_KERNEL_DIR=current
 P=$1
-V=v19.11
+V=v20.02
+PREEMPT_RT=y
 
 cd ${A}
 CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -53,19 +54,29 @@ cd ${C}
 mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
 cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
-# in armbian 20.02 options CONFIG_ARMV8_DEPRECATED and CONFIG_CP15_BARRIER_EMULATION already enabled
-if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
-  cd ${A}
-  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
+if [ "$PREEMPT_RT" = "y" ]; then
+ echo "Copy PREEMPT_RT patches and config"
+ cp ${C}/patches/kernel/sunxi-${B}/rt/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
+ if [ "$PLATFORM" = "sun50i-h5" ]; then
+  cp ${C}/patches/config/rt/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
+ else 
+  cp ${C}/patches/config/rt/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
+ fi
 fi
+
+# in armbian 20.02 options CONFIG_ARMV8_DEPRECATED and CONFIG_CP15_BARRIER_EMULATION already enabled
+#if [ "$PLATFORM" = "sun50i-h5" ]; then
+#  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
+#  cd ${A}
+#  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
+#fi
 
 cd ${A}
 
 rm -rf ./${A}/output/debs
 
 echo "U-Boot & kernel compile for ${P}"
-./compile.sh KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no
+./compile.sh KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no CREATE_PATCHES=yes
 
 cd ${C}
 rm -rf ./${P}
@@ -101,7 +112,14 @@ mkdir ./${P}/boot/overlay-user
 cp ${C}/sources/overlays/${PLATFORM}-*.* ./${P}/boot/overlay-user
 dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-master.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-master.dts
 dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-slave.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-slave.dts
-dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
+if [ "$P" = "cubietruck" ]; then
+ echo "Copy overlays for disabling audio-codec and spdif for cubietruck"
+ dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/sun7i-a20-analog-codec-disable.dtbo ${C}/sources/overlays/sun7i-a20-analog-codec-disable.dts
+ dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/sun7i-a20-spdif-disable.dtbo ${C}/sources/overlays/sun7i-a20-spdif-disable.dts
+else
+ dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
+fi
+
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
   cp ./${A}/config/bootscripts/boot-sun50i-next.cmd ./${P}/boot/boot.cmd
@@ -118,9 +136,9 @@ case $P in
   echo "verbosity=1
 logo=disabled
 console=serial
-disp_mode=1920x1080p60
+disp_mode=none
 overlay_prefix=sun8i-h3
-overlays=i2c0 analog-codec
+overlays=i2c0 usbhost2 analog-codec
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun8i-h3-i2s0-slave
@@ -133,7 +151,7 @@ logo=disabled
 console=serial
 disp_mode=1920x1080p60
 overlay_prefix=sun7i-a20
-overlays=analog-codec
+overlays=
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun7i-a20-i2s0-slave

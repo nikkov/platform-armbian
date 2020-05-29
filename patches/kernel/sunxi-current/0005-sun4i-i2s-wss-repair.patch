@@ -1,0 +1,28 @@
+--- a/sound/soc/sunxi/sun4i-i2s.c	2020-05-18 21:18:38.245635200 +0600
++++ b/sound/soc/sunxi/sun4i-i2s.c	2020-05-19 18:22:05.298259400 +0600
+@@ -409,13 +409,18 @@
+ 
+ static s8 sun4i_i2s_get_wss(const struct sun4i_i2s *i2s, int width)
+ {
+-	if (width < 16 || width > 32)
+-		return -EINVAL;
+-
+-	if (width % 4)
+-		return -EINVAL;
+-
+-	return (width - 16) / 4;
++    switch(width) {
++	case 16:
++	    return 0;
++	case 20:
++	    return 1;
++	case 24:
++	    return 2;
++	case 32:
++	    return 3;
++	default:
++	    return -EINVAL;
++    }
+ }
+ 
+ static s8 sun8i_i2s_get_sr_wss(const struct sun4i_i2s *i2s, int width)

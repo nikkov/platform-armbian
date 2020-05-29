@@ -1,8 +1,8 @@
 diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
-index 9f89a5346..f04c9f96b 100644
+index 229cc89f8..6053abc83 100644
 --- a/sound/soc/codecs/Kconfig
 +++ b/sound/soc/codecs/Kconfig
-@@ -138,6 +138,7 @@ config SND_SOC_ALL_CODECS
+@@ -140,6 +140,7 @@ config SND_SOC_ALL_CODECS
  	select SND_SOC_PCM3168A_I2C if I2C
  	select SND_SOC_PCM3168A_SPI if SPI_MASTER
  	select SND_SOC_PCM5102A
@@ -10,7 +10,7 @@ index 9f89a5346..f04c9f96b 100644
  	select SND_SOC_PCM512x_I2C if I2C
  	select SND_SOC_PCM512x_SPI if SPI_MASTER
  	select SND_SOC_RK3328
-@@ -869,6 +870,9 @@ config SND_SOC_PCM3168A_SPI
+@@ -882,6 +883,9 @@ config SND_SOC_PCM3168A_SPI
  config SND_SOC_PCM5102A
  	tristate
  
@@ -21,10 +21,10 @@ index 9f89a5346..f04c9f96b 100644
  	tristate
  
 diff --git a/sound/soc/codecs/Makefile b/sound/soc/codecs/Makefile
-index 5b4bb8cf4..d9a898aa2 100644
+index c498373dc..1df625df1 100644
 --- a/sound/soc/codecs/Makefile
 +++ b/sound/soc/codecs/Makefile
-@@ -140,6 +140,7 @@ snd-soc-pcm3168a-objs := pcm3168a.o
+@@ -142,6 +142,7 @@ snd-soc-pcm3168a-objs := pcm3168a.o
  snd-soc-pcm3168a-i2c-objs := pcm3168a-i2c.o
  snd-soc-pcm3168a-spi-objs := pcm3168a-spi.o
  snd-soc-pcm5102a-objs := pcm5102a.o
@@ -32,7 +32,7 @@ index 5b4bb8cf4..d9a898aa2 100644
  snd-soc-pcm512x-objs := pcm512x.o
  snd-soc-pcm512x-i2c-objs := pcm512x-i2c.o
  snd-soc-pcm512x-spi-objs := pcm512x-spi.o
-@@ -421,6 +422,7 @@ obj-$(CONFIG_SND_SOC_PCM3168A)	+= snd-soc-pcm3168a.o
+@@ -426,6 +427,7 @@ obj-$(CONFIG_SND_SOC_PCM3168A)	+= snd-soc-pcm3168a.o
  obj-$(CONFIG_SND_SOC_PCM3168A_I2C)	+= snd-soc-pcm3168a-i2c.o
  obj-$(CONFIG_SND_SOC_PCM3168A_SPI)	+= snd-soc-pcm3168a-spi.o
  obj-$(CONFIG_SND_SOC_PCM5102A)	+= snd-soc-pcm5102a.o
@@ -335,3 +335,19 @@ index 000000000..5939c1f8e
 +MODULE_DESCRIPTION("ASoC external clock board for I2S bus");
 +MODULE_LICENSE("GPL v2");
 \ No newline at end of file
+diff --git a/sound/soc/sunxi/Kconfig b/sound/soc/sunxi/Kconfig
+index b1e88d55b..6f5de1d3a 100644
+--- a/sound/soc/sunxi/Kconfig
++++ b/sound/soc/sunxi/Kconfig
+@@ -50,8 +50,11 @@ config SND_SUN50I_CODEC_ANALOG
+ 
+ config SND_SUN4I_I2S
+ 	tristate "Allwinner A10 I2S Support"
++	depends on OF
+ 	select SND_SOC_GENERIC_DMAENGINE_PCM
+ 	select REGMAP_MMIO
++	select SND_SOC_PCM5102A
++	select SND_SOC_I2S_CLOCK_BOARD
+ 	help
+ 	  Say Y or M if you want to add support for codecs attached to
+ 	  the Allwinner A10 I2S. You will also need to select the
