@@ -3,7 +3,7 @@ C=`pwd`
 A=../armbian
 B=current
 # patch for current branch armbian looking for in sunxi-dev???
-USERPATCHES_KERNEL_DIR=current
+USERPATCHES_KERNEL_DIR=dev
 P=$1
 V=v20.02
 PREEMPT_RT=y
@@ -76,7 +76,7 @@ cd ${A}
 rm -rf ./${A}/output/debs
 
 echo "U-Boot & kernel compile for ${P}"
-./compile.sh KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no CREATE_PATCHES=yes
+./compile.sh KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no
 
 cd ${C}
 rm -rf ./${P}
