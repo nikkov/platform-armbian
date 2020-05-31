@@ -64,7 +64,7 @@
 				simple-audio-card,frame-inversion;
 				simple-audio-card,bitclock-master = <&codec_dai>; 
 				simple-audio-card,frame-master = <&codec_dai>; 
-				simple-audio-card,mclk-fs = <64>;
+				simple-audio-card,mclk-fs = <128>;
 				status = "okay";
 
 				simple-audio-card,cpu {
