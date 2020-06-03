@@ -2,11 +2,15 @@
 C=`pwd`
 A=../armbian
 B=current
-# patch for current branch armbian looking for in sunxi-dev???
 USERPATCHES_KERNEL_DIR=${B}
 P=$1
-V=v20.02
+V=v20.05
+RT=$2
+PREEMPT_RT=n
+
+if [ "$RT" = "rt" ]; then
 PREEMPT_RT=y
+fi
 
 cd ${A}
 CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -31,6 +35,9 @@ esac
 
 echo "-----Build for ${P}, platform ${PLATFORM}-----"
 echo "-----Current armbian branch is ${CUR_BRANCH}-----"
+if [ "$PREEMPT_RT" = "y" ]; then
+echo "-----Used PREEMPT_RT patch-----"
+fi
 
 if [ -d ${A} ]; then
   echo "Armbian folder already exists - keeping it"
@@ -57,19 +64,32 @@ cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USER
 if [ "$PREEMPT_RT" = "y" ]; then
  echo "Copy PREEMPT_RT patches and config"
  cp ${C}/patches/kernel/sunxi-${B}/rt/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
+ echo "Copy RT config"
  if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ${C}/patches/config/rt/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
+  rm ./${A}/userpatches/linux-sunxi64-${B}.config
+  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
+  cd ${A}
+  patch -p0 < ${C}/patches/config/rt/linux-sunxi64-${B}.patch
  else 
-  cp ${C}/patches/config/rt/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
+  rm ./${A}/userpatches/linux-sunxi-${B}.config
+  cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
+  cd ${A}
+  patch -p0 < ${C}/patches/config/rt/linux-sunxi-${B}.patch
  fi
-fi
-
-# in armbian 20.02 options CONFIG_ARMV8_DEPRECATED and CONFIG_CP15_BARRIER_EMULATION already enabled
-#if [ "$PLATFORM" = "sun50i-h5" ]; then
+else
+ if [ "$PLATFORM" = "sun50i-h5" ]; then
+ echo "Config patch not used"
+ rm ./${A}/userpatches/linux-sunxi64-${B}.config
 #  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
 #  cd ${A}
 #  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
-#fi
+ else 
+  rm ./${A}/userpatches/linux-sunxi-${B}.config
+  cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
+  cd ${A}
+  patch -p0 < ${C}/patches/config/linux-sunxi-${B}.patch
+ fi
+fi
 
 cd ${A}
 
