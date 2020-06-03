@@ -71,10 +71,12 @@ if [ "$PREEMPT_RT" = "y" ]; then
   cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
   patch -p0 < ${C}/patches/config/rt/linux-sunxi64-${B}.patch
+  cd ${C}
  else 
   cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
   cd ${A}
   patch -p0 < ${C}/patches/config/rt/linux-sunxi-${B}.patch
+  cd ${C}
  fi
 else
  if [ "$PLATFORM" = "sun50i-h5" ]; then
@@ -82,10 +84,12 @@ else
 #  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
 #  cd ${A}
 #  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
+#  cd ${C}
  else 
   cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
   cd ${A}
   patch -p0 < ${C}/patches/config/linux-sunxi-${B}.patch
+  cd ${C}
  fi
 fi
 
