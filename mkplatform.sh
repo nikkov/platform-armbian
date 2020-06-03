@@ -56,8 +56,10 @@ else
   git checkout ${V} && touch .ignore_changes
 fi
 
-echo "Copy patches"
 cd ${C}
+echo "Clean old patches"
+rm -rf ./${A}/userpatches
+echo "Copy patches"
 mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
 cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
@@ -66,12 +68,10 @@ if [ "$PREEMPT_RT" = "y" ]; then
  cp ${C}/patches/kernel/sunxi-${B}/rt/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
  echo "Copy RT config"
  if [ "$PLATFORM" = "sun50i-h5" ]; then
-  rm ./${A}/userpatches/linux-sunxi64-${B}.config
   cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
   patch -p0 < ${C}/patches/config/rt/linux-sunxi64-${B}.patch
  else 
-  rm ./${A}/userpatches/linux-sunxi-${B}.config
   cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
   cd ${A}
   patch -p0 < ${C}/patches/config/rt/linux-sunxi-${B}.patch
@@ -79,12 +79,10 @@ if [ "$PREEMPT_RT" = "y" ]; then
 else
  if [ "$PLATFORM" = "sun50i-h5" ]; then
  echo "Config patch not used"
- rm ./${A}/userpatches/linux-sunxi64-${B}.config
 #  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
 #  cd ${A}
 #  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
  else 
-  rm ./${A}/userpatches/linux-sunxi-${B}.config
   cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
   cd ${A}
   patch -p0 < ${C}/patches/config/linux-sunxi-${B}.patch
@@ -191,4 +189,5 @@ extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/a
   ;;
 esac
 
+rm $P.tar.xz
 tar cJf $P.tar.xz $P
