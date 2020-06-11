@@ -1,5 +1,5 @@
 --- linux-sunxi64-current.config	2020-06-04 20:54:34.979357710 +0600
-+++ userpatches/linux-sunxi64-current.config	2020-06-11 19:46:56.835712442 +0600
++++ userpatches/linux-sunxi64-current.config	2020-06-09 18:40:46.735700100 +0600
 @@ -3875,9 +3875,9 @@
  
  CONFIG_REGULATOR=y
