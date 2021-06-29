@@ -141,6 +141,7 @@ if [ "$P" = "cubietruck" ]; then
 else
  dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
  dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powbut.dtbo ${C}/sources/overlays/${PLATFORM}-powbut.dts
+ dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powman.dtbo ${C}/sources/overlays/${PLATFORM}-powman.dts
 fi
 
 
