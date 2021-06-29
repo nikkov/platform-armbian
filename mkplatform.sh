@@ -4,7 +4,7 @@ A=../armbian
 B=current
 USERPATCHES_KERNEL_DIR=${B}
 P=$1
-V=v20.05
+V=v20.08
 RT=$2
 PREEMPT_RT=n
 
@@ -20,7 +20,7 @@ case $P in
 'nanopineo' | 'nanopiair')
   PLATFORM="sun8i-h3"
   ;;
-'nanopineo2' | 'nanopineoplus2')
+'nanopineo2' | 'nanopineoplus2' | 'nanopineo2black')
   PLATFORM="sun50i-h5"
   ;;
 'cubietruck')
@@ -41,13 +41,13 @@ fi
 
 if [ -d ${A} ]; then
   echo "Armbian folder already exists - keeping it"
-if [ "${CUR_BRANCH}" != "${V}" ];
+if [ "${CUR_BRANCH}" != "heads/${V}" ];
 then
-  echo "Armbian branch changed"
+  echo "Armbian branch changed from ${CUR_BRANCH} to heads/${V}"
   cd ${A}
   git checkout master
   git pull
-  git checkout ${V} && touch .ignore_changes
+  git checkout --track origin/${V} && touch .ignore_changes
 fi
 else
   echo "Clone Armbian repository to folder ${A}"
@@ -66,7 +66,7 @@ cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USER
 if [ "$PREEMPT_RT" = "y" ]; then
  echo "Copy PREEMPT_RT patches and config"
  cp ${C}/patches/kernel/sunxi-${B}/rt/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
- echo "Copy RT config"
+ echo "Copy RT config and patch"
  if [ "$PLATFORM" = "sun50i-h5" ]; then
   cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
@@ -80,7 +80,7 @@ if [ "$PREEMPT_RT" = "y" ]; then
  fi
 else
  if [ "$PLATFORM" = "sun50i-h5" ]; then
- echo "Config patch not used"
+ echo "Copy config and patch"
   cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
   cd ${A}
   patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
@@ -140,6 +140,7 @@ if [ "$P" = "cubietruck" ]; then
  dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/sun7i-a20-spdif-disable.dtbo ${C}/sources/overlays/sun7i-a20-spdif-disable.dts
 else
  dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
+ dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powbut.dtbo ${C}/sources/overlays/${PLATFORM}-powbut.dts
 fi
 
 
@@ -188,6 +189,17 @@ overlays=usbhost1 usbhost2 analog-codec
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun50i-h5-i2s0-slave
+usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
+  ;;
+'nanopineo2black')
+  echo "verbosity=1
+logo=disabled
+console=serial
+overlay_prefix=sun50i-h5
+overlays=usbhost1 usbhost2
+rootdev=/dev/mmcblk0p2
+rootfstype=ext4
 usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
 extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
   ;;

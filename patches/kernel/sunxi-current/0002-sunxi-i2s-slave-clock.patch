@@ -2,14 +2,6 @@ diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
 index 229cc89f8..6053abc83 100644
 --- a/sound/soc/codecs/Kconfig
 +++ b/sound/soc/codecs/Kconfig
-@@ -140,6 +140,7 @@ config SND_SOC_ALL_CODECS
- 	select SND_SOC_PCM3168A_I2C if I2C
- 	select SND_SOC_PCM3168A_SPI if SPI_MASTER
- 	select SND_SOC_PCM5102A
-+	select SND_SOC_I2S_CLOCK_BOARD
- 	select SND_SOC_PCM512x_I2C if I2C
- 	select SND_SOC_PCM512x_SPI if SPI_MASTER
- 	select SND_SOC_RK3328
 @@ -882,6 +883,9 @@ config SND_SOC_PCM3168A_SPI
  config SND_SOC_PCM5102A
  	tristate
