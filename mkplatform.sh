@@ -4,7 +4,7 @@ A=../armbian
 B=current
 USERPATCHES_KERNEL_DIR=${B}
 P=$1
-V=v20.08
+V=v21.08
 RT=$2
 PREEMPT_RT=n
 
@@ -113,12 +113,7 @@ dpkg-deb -x ./${A}/output/debs/linux-u-boot-* ${P}
 dpkg-deb -x ./${A}/output/debs/armbian-firmware_* ${P}
 
 echo "Copy U-Boot"
-if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ./${P}/usr/lib/linux-u-boot-${B}-*/sunxi-spl.bin ./${P}/u-boot
-  cp ./${P}/usr/lib/linux-u-boot-${B}-*/u-boot.itb ./${P}/u-boot
-else
-  cp ./${P}/usr/lib/linux-u-boot-${B}-*/u-boot-sunxi-with-spl.bin ./${P}/u-boot
-fi
+cp ./${P}/usr/lib/linux-u-boot-${B}-*/u-boot-sunxi-with-spl.bin ./${P}/u-boot
 
 rm -rf ./${P}/usr ./${P}/etc
 mv ./${P}/boot/dtb* ./${P}/boot/dtb
