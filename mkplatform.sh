@@ -5,12 +5,6 @@ B=current
 USERPATCHES_KERNEL_DIR=${B}
 P=$1
 V=v21.08
-RT=$2
-PREEMPT_RT=n
-
-if [ "$RT" = "rt" ]; then
-PREEMPT_RT=y
-fi
 
 cd ${A}
 CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -35,9 +29,6 @@ esac
 
 echo "-----Build for ${P}, platform ${PLATFORM}-----"
 echo "-----Current armbian branch is ${CUR_BRANCH}-----"
-if [ "$PREEMPT_RT" = "y" ]; then
-echo "-----Used PREEMPT_RT patch-----"
-fi
 
 if [ -d ${A} ]; then
   echo "Armbian folder already exists - keeping it"
@@ -63,42 +54,25 @@ echo "Copy patches"
 mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
 cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
-if [ "$PREEMPT_RT" = "y" ]; then
- echo "Copy PREEMPT_RT patches and config"
- cp ${C}/patches/kernel/sunxi-${B}/rt/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
- echo "Copy RT config and patch"
- if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
-  cd ${A}
-  patch -p0 < ${C}/patches/config/rt/linux-sunxi64-${B}.patch
-  cd ${C}
- else 
-  cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
-  cd ${A}
-  patch -p0 < ${C}/patches/config/rt/linux-sunxi-${B}.patch
-  cd ${C}
- fi
-else
- if [ "$PLATFORM" = "sun50i-h5" ]; then
- echo "Copy config and patch"
-  cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
-  cd ${A}
-  patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
-  cd ${C}
- else 
-  cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
-  cd ${A}
-  patch -p0 < ${C}/patches/config/linux-sunxi-${B}.patch
-  cd ${C}
- fi
-fi
+#if [ "$PLATFORM" = "sun50i-h5" ]; then
+#echo "Copy config and patch"
+# cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
+# cd ${A}
+# patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
+# cd ${C}
+#else 
+# cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
+# cd ${A}
+# patch -p0 < ${C}/patches/config/linux-sunxi-${B}.patch
+# cd ${C}
+#fi
 
 cd ${A}
 
 rm -rf ./${A}/output/debs
 
 echo "U-Boot & kernel compile for ${P}"
-./compile.sh KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no
+./compile.sh docker KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no IGNORE_CHANGES=yes
 
 cd ${C}
 rm -rf ./${P}
