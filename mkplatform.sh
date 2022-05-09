@@ -11,7 +11,7 @@ CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
 cd ${C}
 
 case $P in
-'nanopineo' | 'nanopiair')
+'nanopineo' | 'nanopiair' | 'orangepipc')
   PLATFORM="sun8i-h3"
   ;;
 'nanopineo2' | 'nanopineoplus2' | 'nanopineo2black')
@@ -28,23 +28,23 @@ case $P in
 esac
 
 echo "-----Build for ${P}, platform ${PLATFORM}-----"
-echo "-----Current armbian branch is ${CUR_BRANCH}-----"
 
-if [ -d ${A} ]; then
-  echo "Armbian folder already exists - keeping it"
-if [ "${CUR_BRANCH}" != "heads/${V}" ];
-then
-  echo "Armbian branch changed from ${CUR_BRANCH} to heads/${V}"
-  cd ${A}
-  git checkout master
-  git pull
-  git checkout --track origin/${V} && touch .ignore_changes
-fi
-else
+if [ ! -d ${A} ]; then
+  echo "Armbian folder not exists"
   echo "Clone Armbian repository to folder ${A}"
   git clone https://github.com/armbian/build ${A}
+else
+  echo "Armbian folder already exists - keeping it"
+fi
+
   cd ${A}
-  git checkout ${V} && touch .ignore_changes
+CUR_BRANCH=`git branch --show-current`
+echo "-----Current armbian branch is ${CUR_BRANCH}-----"
+if [ "${CUR_BRANCH}" != "${V}" ];
+then
+  echo "Armbian branch will changed from ${CUR_BRANCH} to ${V}"
+  git fetch
+  git switch ${V} && touch .ignore_changes
 fi
 
 cd ${C}
@@ -125,7 +125,7 @@ touch ./${P}/boot/.next
 
 echo "Create armbianEnv.txt"
 case $P in
-'nanopineo' | 'nanopiair')
+'nanopineo' | 'nanopiair' | 'orangepipc')
   echo "verbosity=1
 logo=disabled
 console=serial
