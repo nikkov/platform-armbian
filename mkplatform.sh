@@ -5,6 +5,7 @@ B=current
 USERPATCHES_KERNEL_DIR=${B}
 P=$1
 V=v21.08
+D=${P}-armbian
 
 cd ${A}
 CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -54,19 +55,6 @@ echo "Copy patches"
 mkdir -p ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}
 cp ${C}/patches/kernel/sunxi-${B}/*.patch ./${A}/userpatches/kernel/sunxi-${USERPATCHES_KERNEL_DIR}/
 
-#if [ "$PLATFORM" = "sun50i-h5" ]; then
-#echo "Copy config and patch"
-# cp ./${A}/config/kernel/linux-sunxi64-${B}.config ./${A}/userpatches/linux-sunxi64-${B}.config
-# cd ${A}
-# patch -p0 < ${C}/patches/config/linux-sunxi64-${B}.patch
-# cd ${C}
-#else 
-# cp ./${A}/config/kernel/linux-sunxi-${B}.config ./${A}/userpatches/linux-sunxi-${B}.config
-# cd ${A}
-# patch -p0 < ${C}/patches/config/linux-sunxi-${B}.patch
-# cd ${C}
-#fi
-
 cd ${A}
 
 rm -rf ./${A}/output/debs
@@ -75,53 +63,53 @@ echo "U-Boot & kernel compile for ${P}"
 ./compile.sh docker KERNEL_ONLY=yes BOARD=${P} BRANCH=${B} LIB_TAG=${V} RELEASE=buster KERNEL_CONFIGURE=no EXTERNAL=yes BUILD_KSRC=no BUILD_DESKTOP=no IGNORE_CHANGES=yes
 
 cd ${C}
-rm -rf ./${P}
-mkdir ./${P}
-mkdir ./${P}/u-boot
-mkdir -p ./${P}/usr/sbin
+rm -rf ./${D}
+mkdir ./${D}
+mkdir ./${D}/u-boot
+mkdir -p ./${D}/usr/sbin
 
 echo "Install packages for ${P}"
-dpkg-deb -x ./${A}/output/debs/linux-dtb-* ${P}
-dpkg-deb -x ./${A}/output/debs/linux-image-* ${P}
-dpkg-deb -x ./${A}/output/debs/linux-u-boot-* ${P}
-dpkg-deb -x ./${A}/output/debs/armbian-firmware_* ${P}
+dpkg-deb -x ./${A}/output/debs/linux-dtb-* ${D}
+dpkg-deb -x ./${A}/output/debs/linux-image-* ${D}
+dpkg-deb -x ./${A}/output/debs/linux-u-boot-* ${D}
+dpkg-deb -x ./${A}/output/debs/armbian-firmware_* ${D}
 
 echo "Copy U-Boot"
-cp ./${P}/usr/lib/linux-u-boot-${B}-*/u-boot-sunxi-with-spl.bin ./${P}/u-boot
+cp ./${D}/usr/lib/linux-u-boot-${B}-*/u-boot-sunxi-with-spl.bin ./${D}/u-boot
 
-rm -rf ./${P}/usr ./${P}/etc
-mv ./${P}/boot/dtb* ./${P}/boot/dtb
+rm -rf ./${D}/usr ./${D}/etc
+mv ./${D}/boot/dtb* ./${D}/boot/dtb
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
-  mv ./${P}/boot/vmlinuz* ./${P}/boot/Image
+  mv ./${D}/boot/vmlinuz* ./${D}/boot/Image
 else
-  mv ./${P}/boot/vmlinuz* ./${P}/boot/zImage
+  mv ./${D}/boot/vmlinuz* ./${D}/boot/zImage
 fi
 
 echo "Copy overlays for ${PLATFORM}"
-mkdir ./${P}/boot/overlay-user
-cp ${C}/sources/overlays/${PLATFORM}-*.* ./${P}/boot/overlay-user
-dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-master.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-master.dts
-dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-i2s0-slave.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-slave.dts
+mkdir ./${D}/boot/overlay-user
+cp ${C}/sources/overlays/${PLATFORM}-*.* ./${D}/boot/overlay-user
+dtc -@ -q -I dts -O dtb -o ./${D}/boot/overlay-user/${PLATFORM}-i2s0-master.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-master.dts
+dtc -@ -q -I dts -O dtb -o ./${D}/boot/overlay-user/${PLATFORM}-i2s0-slave.dtbo ${C}/sources/overlays/${PLATFORM}-i2s0-slave.dts
 if [ "$P" = "cubietruck" ]; then
  echo "Copy overlays for disabling audio-codec and spdif for cubietruck"
- dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/sun7i-a20-analog-codec-disable.dtbo ${C}/sources/overlays/sun7i-a20-analog-codec-disable.dts
- dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/sun7i-a20-spdif-disable.dtbo ${C}/sources/overlays/sun7i-a20-spdif-disable.dts
+ dtc -@ -q -I dts -O dtb -o ./${D}/boot/overlay-user/sun7i-a20-analog-codec-disable.dtbo ${C}/sources/overlays/sun7i-a20-analog-codec-disable.dts
+ dtc -@ -q -I dts -O dtb -o ./${D}/boot/overlay-user/sun7i-a20-spdif-disable.dtbo ${C}/sources/overlays/sun7i-a20-spdif-disable.dts
 else
- dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
- dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powbut.dtbo ${C}/sources/overlays/${PLATFORM}-powbut.dts
- dtc -@ -q -I dts -O dtb -o ./${P}/boot/overlay-user/${PLATFORM}-powman.dtbo ${C}/sources/overlays/${PLATFORM}-powman.dts
+ dtc -@ -q -I dts -O dtb -o ./${D}/boot/overlay-user/${PLATFORM}-powen.dtbo ${C}/sources/overlays/${PLATFORM}-powen.dts
+ dtc -@ -q -I dts -O dtb -o ./${D}/boot/overlay-user/${PLATFORM}-powbut.dtbo ${C}/sources/overlays/${PLATFORM}-powbut.dts
+ dtc -@ -q -I dts -O dtb -o ./${D}/boot/overlay-user/${PLATFORM}-powman.dtbo ${C}/sources/overlays/${PLATFORM}-powman.dts
 fi
 
 
 if [ "$PLATFORM" = "sun50i-h5" ]; then
-  cp ./${A}/config/bootscripts/boot-sun50i-next.cmd ./${P}/boot/boot.cmd
+  cp ./${A}/config/bootscripts/boot-sun50i-next.cmd ./${D}/boot/boot.cmd
 else
-  cp ./${A}/config/bootscripts/boot-sunxi.cmd ./${P}/boot/boot.cmd
+  cp ./${A}/config/bootscripts/boot-sunxi.cmd ./${D}/boot/boot.cmd
 fi
 
-mkimage -c none -A arm -T script -d ./${P}/boot/boot.cmd ./${P}/boot/boot.scr
-touch ./${P}/boot/.next
+mkimage -c none -A arm -T script -d ./${D}/boot/boot.cmd ./${D}/boot/boot.scr
+touch ./${D}/boot/.next
 
 echo "Create armbianEnv.txt"
 case $P in
@@ -131,12 +119,12 @@ logo=disabled
 console=serial
 disp_mode=none
 overlay_prefix=sun8i-h3
-overlays=i2c0 analog-codec
+overlays=i2c0 analog-codec i2c0
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun8i-h3-i2s0-slave
 usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
-extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh net.ifnames=0" >> ./${D}/boot/armbianEnv.txt
   ;;
 'cubietruck')
   echo "verbosity=1
@@ -144,36 +132,36 @@ logo=disabled
 console=serial
 disp_mode=1920x1080p60
 overlay_prefix=sun7i-a20
-overlays=
+overlays=i2c0
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun7i-a20-i2s0-slave
-extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh net.ifnames=0" >> ./${D}/boot/armbianEnv.txt
   ;;
 'nanopineo2' | 'nanopineoplus2')
   echo "verbosity=1
 logo=disabled
 console=serial
 overlay_prefix=sun50i-h5
-overlays=usbhost1 usbhost2 analog-codec
+overlays=usbhost1 usbhost2 analog-codec i2c0
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 user_overlays=sun50i-h5-i2s0-slave
 usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
-extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh net.ifnames=0" >> ./${D}/boot/armbianEnv.txt
   ;;
 'nanopineo2black')
   echo "verbosity=1
 logo=disabled
 console=serial
 overlay_prefix=sun50i-h5
-overlays=usbhost1 usbhost2
+overlays=usbhost1 usbhost2 i2c0
 rootdev=/dev/mmcblk0p2
 rootfstype=ext4
 usbstoragequirks=0x2537:0x1066:u,0x2537:0x1068:u
-extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh" >> ./${P}/boot/armbianEnv.txt
+extraargs=imgpart=/dev/mmcblk0p2 imgfile=/volumio_current.sqsh net.ifnames=0" >> ./${D}/boot/armbianEnv.txt
   ;;
 esac
 
-rm $P.tar.xz
-tar cJf $P.tar.xz $P
+rm $D.tar.xz
+tar cJf $D.tar.xz $D
