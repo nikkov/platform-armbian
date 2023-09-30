@@ -1,0 +1,74 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+        compatible = "friendlyelec,nanopi-neo3", "rockchip,rk3328";
+
+    /*
+    * Disable GPIO3_A5, GPIO3_A7 pin from UART1
+    */
+
+    fragment@0 {
+        target = <&uart1>;
+        __overlay__ {
+            status = "disabled";
+        };
+    };
+    fragment@1 {
+        target = <&uart1_cts>;
+        __overlay__ {
+            status = "disabled";
+        };
+    };
+    fragment@2 {
+        target = <&uart1_rts_pin>;
+        __overlay__ {
+            status = "disabled";
+        };
+    };
+
+    fragment@3 {
+        target = <&leds>;
+        __overlay__ {
+            power_en: power-en {
+                gpios = <&gpio3 7 0>;
+                label = "power_enabled";
+                default-state = "on";
+            };
+        };
+    };
+
+    fragment@4 {
+        target-path = "/";
+        __overlay__ {
+            gpio-keys-user {
+                compatible = "gpio-keys";
+                pinctrl-names = "default";
+                pinctrl-0 = <&power_button_gpio>;
+
+                power_button: power-button {
+                    label = "power_off";
+                    linux,input-type = <1>;
+                    gpio-key,wakeup = <1>;
+                    linux,code = <116>;
+                    debounce-interval = <100>;
+                    gpios = <&gpio3 5 1>;
+               };
+           };
+        };
+    };
+
+    fragment@5 {
+        target = <&pinctrl>;
+        __overlay__ {
+            power_manager {
+                power_button_gpio: power-button-gpio {
+                    rockchip,pins = <3 5 0 &pcfg_pull_up>;
+                };
+                power_led_gpio: power-led-gpio {
+                    rockchip,pins = <3 7 0 &pcfg_pull_none>;
+                };
+            };
+        };
+    };
+};

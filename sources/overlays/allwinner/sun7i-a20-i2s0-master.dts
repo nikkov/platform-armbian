@@ -1,0 +1,59 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "allwinner,sun7i-a20";
+
+	fragment@0 {
+		target = <&pio>;
+		__overlay__ {
+			i2s0_pins: i2s0 {
+				pins = "PB5", "PB6", "PB7", "PB8", "PB9", "PB10", "PB11", "PB12";
+				function = "i2s0";
+			};
+		};
+	};
+
+ 	fragment@1 {
+ 		target-path = "/";
+ 		__overlay__ {
+			pcm5102a: pcm5102a {
+			#sound-dai-cells = <0>;
+			compatible = "ti,pcm5102a";
+			pcm510x,format = "i2s";
+			};
+ 		};
+ 	};
+
+	fragment@2 {
+		target = <&i2s0>;
+		__overlay__ {
+			status = "okay";
+			pinctrl-0 = <&i2s0_pins>;
+			sound-dai = <&pcm5102a>;
+			pinctrl-names = "default";
+		};
+	};
+
+	fragment@3 {
+		target-path = "/";
+		__overlay__ {
+			sound_i2s {
+				compatible = "simple-audio-card";
+				simple-audio-card,name = "I2S-master";
+				simple-audio-card,mclk-fs = <128>;
+				simple-audio-card,format = "i2s";
+				simple-audio-card,frame-inversion;
+				status = "okay";
+
+				simple-audio-card,cpu {
+					sound-dai = <&i2s0>;
+				};
+
+				simple-audio-card,codec {
+					sound-dai = <&pcm5102a>;
+				};
+			};
+		};
+	};
+};

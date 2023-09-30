@@ -1,0 +1,88 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "friendlyelec,nanopi-neo3", "rockchip,rk3328";
+
+    fragment@0 {
+        target-path = "/";
+        __overlay__ {
+            osc44m: osc44m{
+                compatible = "fixed-clock";
+                #clock-cells = <0>;
+                clock-frequency = <11289600>;
+            };
+
+            osc48m: osc48m {
+                compatible = "fixed-clock";
+                #clock-cells = <0>;
+                clock-frequency = <12288000>;
+            };
+
+            clkin_i2s1: clkin_i2s1 {
+                compatible = "gpio-mux-clock";
+                #clock-cells = <0>;
+                clock-output-names = "clkin_i2s1";
+                clocks = <&osc48m>, <&osc44m>;
+                select-gpios = <&gpio2 2 0>;
+            };
+        };
+    };
+
+    fragment@1 {
+        target-path = "/";
+        __overlay__ {
+            i2s1_out: i2s1-clock {
+                #sound-dai-cells = <0>;
+                compatible = "custom,i2s_clock_board";
+                status = "okay";
+                clocks = <&cru 42>, <&clkin_i2s1>;
+                clock-names = "i2s_clk", "i2s_pclk";
+                mclk-fs = <256>;
+            };
+
+            i2s_sound: i2s-sound {
+                compatible = "simple-audio-card";
+                simple-audio-card,format = "i2s";
+                simple-audio-card,name = "I2S";
+                status = "okay";
+
+                simple-audio-card,cpu {
+                    sound-dai = <&i2s1>;
+                };
+
+                simple-audio-card,codec {
+                    sound-dai = <&i2s1_out>;
+                };
+            };
+        };
+    };
+
+    fragment@3 {
+        target = <&i2s1>;
+        __overlay__ {
+            rockchip,playback-channels = <2>;
+            rockchip,capture-channels = <2>;
+            pinctrl-names = "default";
+            pinctrl-0 = <&i2s1_sclk>, <&i2s1_lrckrx>, <&i2s1_lrcktx>, <&i2s1_sdi>, <&i2s1_sdo>;
+            clocks = <&cru 42>, <&cru 312>;
+            clock-names = "i2s_clk", "i2s_hclk";
+        };
+    };
+
+    fragment@4 {
+        target = <&pinctrl>;
+        __overlay__ {
+            i2s1_mclk {
+                i2s1_mclk: i2s1-mclk {
+                    rockchip,pins = <2 15 1 &pcfg_pull_none>;
+                };
+            };
+            ext_i2s {
+                select_gpios: select-gpios {
+                    rockchip,pins = <2 2 0 &pcfg_pull_up>;
+                };
+            };
+        };
+    };
+};

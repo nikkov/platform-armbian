@@ -1,0 +1,66 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "allwinner,sun7i-a20";
+
+    fragment@0 {
+	target = <&pio>;
+		__overlay__ {
+			i2s0_pins: i2s0 {
+				pins = "PB6", "PB7", "PB8", "PB11", "PB12";
+				function = "i2s0";
+			};
+			
+			i2sclk_pins: i2sclk_pins {
+				pins = "PB5", "PB9", "PB10";
+				function = "gpio_out";
+			};
+		};
+    };
+
+    fragment@1 {
+		target = <&i2s0>;
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2s0_pins>;
+			status = "okay";
+		};
+    };
+	
+	fragment@4 {
+		target-path = "/";
+		__overlay__ {
+			i2s0_out: i2s0-clock {
+				#sound-dai-cells = <0>;
+				compatible = "custom,i2s_clock_board";
+				pinctrl-names = "default";
+				pinctrl-0 = <&i2sclk_pins>;
+				clk-gpios = <&pio 1 5 1>, <&pio 1 9 1>, <&pio 1 10 1>;
+				inversion-clock-select;
+				status = "okay";
+			};
+
+			sound_i2s {
+				simple-audio-card,name = "External DAC";
+				compatible = "simple-audio-card";
+				simple-audio-card,format = "i2s";
+				simple-audio-card,frame-inversion;
+				simple-audio-card,bitclock-master = <&codec_dai>; 
+				simple-audio-card,frame-master = <&codec_dai>; 
+				simple-audio-card,mclk-fs = <128>;
+				status = "okay";
+
+				simple-audio-card,cpu {
+					sound-dai = <&i2s0>;
+					dai-tdm-slot-num = <2>;
+					dai-tdm-slot-width = <32>;
+				};
+
+				codec_dai: simple-audio-card,codec {
+					sound-dai = <&i2s0_out>;
+				};
+			};
+		};
+	};
+};
